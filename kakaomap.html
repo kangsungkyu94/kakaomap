@@ -16,6 +16,7 @@
     .legend-row:last-child { margin-bottom: 0; }
     .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   </style>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b&autoload=false"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -26,18 +27,18 @@
   </div>
   <script>
     var overlays = [];
+    var mapObj = null;
 
-    function initMap() {
-      var map = window.__map = new kakao.maps.Map(document.getElementById('map'), {
+    kakao.maps.load(function() {
+      mapObj = new kakao.maps.Map(document.getElementById('map'), {
         center: new kakao.maps.LatLng(37.4807, 126.8820),
         level: 4
       });
       window.parent.postMessage({ type: 'mapReady' }, '*');
-    }
+    });
 
     function drawOverlays(rList, cIds, kw) {
-      var map = window.__map;
-      if (!map) return;
+      if (!mapObj) return;
       overlays.forEach(function(o) { o.setMap(null); });
       overlays = [];
       var filteredIds = {};
@@ -63,7 +64,7 @@
           content: content,
           yAnchor: 1.3
         });
-        overlay.setMap(map);
+        overlay.setMap(mapObj);
         overlays.push(overlay);
       });
     }
@@ -78,6 +79,5 @@
       }
     });
   </script>
-  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b&onload=initMap"></script>
 </body>
 </html>
