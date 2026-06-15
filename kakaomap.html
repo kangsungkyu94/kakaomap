@@ -18,9 +18,19 @@
     });
     var overlays = [];
 
+    //setTimeout(function() {
+    //  window.parent.postMessage({ type: 'mapReady' }, '*');
+    //}, 500);
+    // 500ms 후 한 번, 그 후 1초마다 최대 10번 재시도
+    var readyCount = 0;
+    var readyInterval = setInterval(function() {
+      window.parent.postMessage({ type: 'mapReady' }, '*');
+      readyCount++;
+      if (readyCount >= 10) clearInterval(readyInterval);
+    }, 1000);
     setTimeout(function() {
       window.parent.postMessage({ type: 'mapReady' }, '*');
-    }, 500);
+    }, 300);
 
     function drawOverlays(rList, cIds, kw) {
       overlays.forEach(function(o) { o.setMap(null); });
