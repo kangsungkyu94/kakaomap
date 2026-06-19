@@ -20,55 +20,63 @@
 <body>
   <div id="map"></div>
   <div class="legend">
+    <div class="legend-row"><span class="dot" style="background:#F97316"></span> 선택한 식당</div>
     <div class="legend-row"><span class="dot" style="background:#1D9E75"></span> 금일 메뉴 등록 완료</div>
     <div class="legend-row"><span class="dot" style="background:#888780"></span> 메뉴 미등록</div>
     <div class="legend-row"><span class="dot" style="background:#D4537E"></span> 비교 선택</div>
   </div>
-  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b"></script>
   <script>
-    var mapObj = new kakao.maps.Map(document.getElementById('map'), {
-      center: new kakao.maps.LatLng(37.4807, 126.8820),
-      level: 4
-    });
     var overlays = [];
 
-    var readyCount = 0;
-    var readyInterval = setInterval(function() {
+    function initMap() {
+      var map = window.__map = new kakao.maps.Map(document.getElementById('map'), {
+        center: new kakao.maps.LatLng(37.4807, 126.8820),
+        level: 4
+      });
       window.parent.postMessage({ type: 'mapReady' }, '*');
-      readyCount++;
-      if (readyCount >= 10) clearInterval(readyInterval);
-    }, 1000);
-    setTimeout(function() {
-      window.parent.postMessage({ type: 'mapReady' }, '*');
-    }, 300);
+    }
 
-    function drawOverlays(rList, cIds, kw) {
+    function drawOverlays(rList, cIds, kw, selectedId) {
+      var map = window.__map;
+      if (!map) return;
+
       overlays.forEach(function(o) { o.setMap(null); });
       overlays = [];
+
       var filteredIds = {};
       rList.forEach(function(r) {
         if (!kw || r.menu.some(function(m) { return m.name.indexOf(kw) !== -1; })) {
           filteredIds[r.id] = true;
         }
       });
+
       rList.forEach(function(r) {
         if (!r.lat || !r.lng) return;
-        var isCompare = cIds.indexOf(r.id) !== -1;
+        var isSelected = r.id === selectedId;
+        var isCompare  = cIds.indexOf(r.id) !== -1;
         var isFiltered = !!filteredIds[r.id];
-        var dimmed = kw && !isFiltered;
-        var color = isCompare ? '#D4537E' : (r.menu && r.menu.length > 0 ? '#1D9E75' : '#888780');
+        var dimmed     = kw && !isFiltered;
+
+        var color = isSelected ? '#F97316'
+                  : isCompare  ? '#D4537E'
+                  : (r.menu && r.menu.length > 0 ? '#1D9E75' : '#888780');
+        var prefix = isSelected ? '★ ' : (isCompare ? '✓ ' : '');
+        var extra  = isSelected
+          ? 'font-size:13px;font-weight:800;box-shadow:0 0 0 2px #fff,0 2px 8px rgba(0,0,0,0.3);'
+          : 'font-size:12px;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.25);';
+
         var content = '<div onclick="pinClick(' + r.id + ')" style="' +
           'background:' + color + ';color:#fff;padding:5px 10px;border-radius:20px;' +
-          'font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;' +
-          'opacity:' + (dimmed ? 0.3 : 1) + ';box-shadow:0 2px 6px rgba(0,0,0,0.25);' +
-          'font-family:-apple-system,sans-serif;display:inline-block;">' +
-          (isCompare ? '✓ ' : '') + r.name + '</div>';
+          'white-space:nowrap;cursor:pointer;opacity:' + (dimmed ? 0.3 : 1) + ';' +
+          extra + 'font-family:-apple-system,sans-serif;display:inline-block;">' +
+          prefix + r.name + '</div>';
+
         var overlay = new kakao.maps.CustomOverlay({
           position: new kakao.maps.LatLng(r.lat, r.lng),
           content: content,
           yAnchor: 1.3
         });
-        overlay.setMap(mapObj);
+        overlay.setMap(map);
         overlays.push(overlay);
       });
     }
@@ -79,9 +87,10 @@
 
     window.addEventListener('message', function(e) {
       if (e.data && e.data.type === 'updateMap') {
-        drawOverlays(e.data.restaurants, e.data.compareIds, e.data.keyword);
+        drawOverlays(e.data.restaurants, e.data.compareIds, e.data.keyword, e.data.selectedId);
       }
     });
   </script>
+  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b&onload=initMap"></script>
 </body>
 </html>
