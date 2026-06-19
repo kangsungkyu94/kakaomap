@@ -33,7 +33,14 @@
         center: new kakao.maps.LatLng(37.4807, 126.8820),
         level: 4
       });
-      window.parent.postMessage({ type: 'mapReady' }, '*');
+      // 부모 리스너가 아직 등록 전일 수 있으므로 300ms 후 첫 전송, 이후 1초 간격 최대 10회 재전송
+      var count = 0;
+      function sendReady() {
+        window.parent.postMessage({ type: 'mapReady' }, '*');
+        count++;
+        if (count < 10) setTimeout(sendReady, 1000);
+      }
+      setTimeout(sendReady, 300);
     }
 
     function drawOverlays(rList, cIds, kw, selectedId) {
