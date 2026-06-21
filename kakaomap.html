@@ -25,23 +25,9 @@
     <div class="legend-row"><span class="dot" style="background:#888780"></span> 메뉴 미등록</div>
     <div class="legend-row"><span class="dot" style="background:#D4537E"></span> 비교 선택</div>
   </div>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b&autoload=false"></script>
   <script>
     var overlays = [];
-
-    function initMap() {
-      var map = window.__map = new kakao.maps.Map(document.getElementById('map'), {
-        center: new kakao.maps.LatLng(37.4807, 126.8820),
-        level: 4
-      });
-      // 부모 리스너가 아직 등록 전일 수 있으므로 300ms 후 첫 전송, 이후 1초 간격 최대 10회 재전송
-      var count = 0;
-      function sendReady() {
-        window.parent.postMessage({ type: 'mapReady' }, '*');
-        count++;
-        if (count < 10) setTimeout(sendReady, 1000);
-      }
-      setTimeout(sendReady, 300);
-    }
 
     function drawOverlays(rList, cIds, kw, selectedId) {
       var map = window.__map;
@@ -97,7 +83,20 @@
         drawOverlays(e.data.restaurants, e.data.compareIds, e.data.keyword, e.data.selectedId);
       }
     });
+
+    kakao.maps.load(function() {
+      var map = window.__map = new kakao.maps.Map(document.getElementById('map'), {
+        center: new kakao.maps.LatLng(37.4807, 126.8820),
+        level: 4
+      });
+      var count = 0;
+      function sendReady() {
+        window.parent.postMessage({ type: 'mapReady' }, '*');
+        count++;
+        if (count < 10) setTimeout(sendReady, 1000);
+      }
+      setTimeout(sendReady, 300);
+    });
   </script>
-  <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=f64554cda618c224154ab4621b15243b&onload=initMap"></script>
 </body>
 </html>
